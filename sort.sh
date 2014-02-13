@@ -1,0 +1,1 @@
+sort -r < ls.txt

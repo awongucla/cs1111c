@@ -1,0 +1,2 @@
+ech h;
+echo print

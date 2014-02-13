@@ -1,0 +1,47 @@
+This is a skeleton for CS 111 Lab 1.
+
+Replace this README file with notes on your implementation.
+Mentions any special features or limitations.
+
+	In my function make_command_stream, I first call a function that
+reads the characters from a file into a char array.  As it adds characters
+to the char array, it truncates multiple consecutive spaces or a single tab
+into one space for better readability.  If it encounters a comment, it ignores
+all characters up to the newline and does not add them to the char array.
+
+	The char array now has the chars from the file excluding comments and 
+extra whitespace.  Now, I parsed this char array so that every character or group of
+characters could be classified as one of the command types from the command-internals.c 
+file.  In this file, I added additional values to the enum command_type.  The values I added
+were NEW_LINE, OPEN_PAREN, CLOSED_PAREN, LEFT_REDIRECT, RIGHT_REDIRECT, and IGNORE_COMMAND.
+I added these extra values so that every character or group of characters could be classified
+as a type of command.  When I classified something as a simple command, I also recorded the 
+number of words in the command for syntax checking purposes later.  At the end of this
+stage of the parsing, I now have a dynamically allocated array of commands. 
+
+	Now, I loop through this list one more time to check for syntax errors.  I do this
+by accessing each index of the command list, and checking the commands that are adjacent
+to it.  In some cases, I had to check commands farther away from the command I was currently at.
+
+	After this final syntax checking, the command list is not ready to be added into
+a tree.  I implemented a function that adds the commands to a tree by using two stacks.
+One stack is for the operands, or simple_commands, and the other stack is for the operators.
+As I loop through my command list, when I reach an operand, I push it onto the operand stack.
+When I reach an operator, I check the top of the stack: while the top of the operator stack has a higher precedence than the operator I am at in the command list, I pop it off the stack.  Then I add
+this operator to the stack.  When an operator is popped off the stack, I pop off and assign the top two operands in the operand stack as children to the popped off operator.  Then, I push the operator back onto the operand stack.  After I reach the end of the command list, I pop all operators off the stack and do the above operations.  Whenever I reach a semicolon, I break the loop and pop everything off the stack.
+
+	Finally, I create a command_stream data structure that stores the head of the tree list (command_t*), and the size of the tree list.  These two data values are enough to loop through all the elements in the tree list and print them out.
+
+LAB 1B
+
+	To execute the commands in the tree of commands, the function execute_command would essentially
+continue to call itself recursively until it reaches a simple command.  To implement the redirect, I used the function 
+dup2.  To execute commands, I used the function execvp.  I had to handle the case where the first word
+of the simple command was "exec", in which I made the input of the execvp begin at index 1 instead of 0.
+Whenever I called execvp, I called fork first so that the execution of the command was in a separate process.
+The the parent process would then wait for the child process to finish to check whether the child's execution
+was successful or not.
+
+	For execute_command reached an operator, it executes the left child first, and then it may execute the right child
+depending on which operator it is.  Throughout all code, whenever I used fork, dup2, open, close, pipe, or execvp functions
+in case there a was failure in their execution. 
